@@ -14,11 +14,9 @@ set(simulation_SRCS
   simulateduiwidgetX12.cpp
   simulateduiwidgetJumperT12.cpp
   simulateduiwidgetJumperTLITE.cpp
-  simulateduiwidgetJumperTPRO.cpp
   simulateduiwidgetJumperT16.cpp
   simulateduiwidgetJumperT18.cpp
   simulateduiwidgetTX12.cpp
-  simulateduiwidgetZorro.cpp
   simulateduiwidgetT8.cpp
   simulateduiwidgetTX16S.cpp
   simulatorinterface.cpp
@@ -45,11 +43,9 @@ set(simulation_UIS
   simulateduiwidgetX12.ui
   simulateduiwidgetJumperT12.ui
   simulateduiwidgetJumperTLITE.ui
-  simulateduiwidgetJumperTPRO.ui
   simulateduiwidgetJumperT16.ui
   simulateduiwidgetJumperT18.ui
   simulateduiwidgetTX12.ui
-  simulateduiwidgetZorro.ui
   simulateduiwidgetT8.ui
   simulateduiwidgetTX16S.ui
   simulatormainwindow.ui

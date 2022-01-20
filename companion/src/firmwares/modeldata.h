@@ -34,7 +34,6 @@
 #include "sensordata.h"
 #include "telem_data.h"
 #include "timerdata.h"
-#include "generalsettings.h"
 
 #include <QtCore>
 
@@ -112,7 +111,6 @@ enum TrainerMode {
 };
 
 #define INPUT_NAME_LEN 4
-#define CPN_MAX_BITMAP_LEN 14
 
 class ModelData {
   Q_DECLARE_TR_FUNCTIONS(ModelData)
@@ -171,7 +169,6 @@ class ModelData {
     bool potsWarnEnabled[CPN_MAX_POTS];
     int potsWarnPosition[CPN_MAX_POTS];
     bool displayChecklist;
-
     GVarData gvarData[CPN_MAX_GVARS];
     MavlinkData mavlink;
     unsigned int telemetryProtocol;
@@ -179,7 +176,7 @@ class ModelData {
     unsigned int  rssiSource;
     RSSIAlarmData rssiAlarms;
 
-    char bitmap[CPN_MAX_BITMAP_LEN + 1];
+    char bitmap[10+1];
 
     unsigned int trainerMode;  // TrainerMode
 
@@ -197,18 +194,10 @@ class ModelData {
 
     char registrationId[8+1];
 
-    // Function switches
-    unsigned int functionSwitchConfig;
-    unsigned int functionSwitchGroup;
-    unsigned int functionSwitchStartConfig;
-    unsigned int functionSwitchLogicalState;
-    char functionSwitchNames[CPN_MAX_FUNCTION_SWITCHES][HARDWARE_NAME_LEN + 1];
-
     void clear();
     bool isEmpty() const;
     void setDefaultInputs(const GeneralSettings & settings);
     void setDefaultMixes(const GeneralSettings & settings);
-    void setDefaultFunctionSwitches(int functionSwitchCount);
     void setDefaultValues(unsigned int id, const GeneralSettings & settings);
 
     int getTrimValue(int phaseIdx, int trimIdx);

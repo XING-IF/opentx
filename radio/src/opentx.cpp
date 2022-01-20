@@ -111,17 +111,6 @@ void per10ms()
 {
   g_tmr10ms++;
 
-#if defined(RADIO_FAMILY_TBS) && !defined(SIMU)
-  // workaround to deal with faulty scheduler after entering USB MSD mode for Tango2
-  if (usbPlugged() && getSelectedUsbMode() == USB_MASS_STORAGE_MODE) {
-    WATCHDOG_SUSPEND(200);
-  }
-  else if (usbStarted() && !usbPlugged() && getSelectedUsbMode() == USB_MASS_STORAGE_MODE) {
-    boardSetSkipWarning();
-    NVIC_SystemReset();
-  }
-#endif
-
   if (watchdogTimeout) {
     watchdogTimeout -= 1;
     WDG_RESET();  // Retrigger hardware watchdog
@@ -134,9 +123,8 @@ void per10ms()
 #endif
 
   if (trimsCheckTimer) trimsCheckTimer--;
-#if defined(TRAINER_GPIO)
   if (ppmInputValidityTimer) ppmInputValidityTimer--;
-#endif
+
   if (trimsDisplayTimer)
     trimsDisplayTimer--;
   else
@@ -169,10 +157,6 @@ void per10ms()
 
   readKeysAndTrims();
 
-#if defined(FUNCTION_SWITCHES)
-  evalFunctionSwitches();
-#endif
-
 #if defined(ROTARY_ENCODER_NAVIGATION)
   if (IS_ROTARY_ENCODER_NAVIGATION_ENABLE()) {
     static rotenc_t rePreviousValue;
@@ -187,17 +171,7 @@ void per10ms()
       if ((g_tmr10ms - lastEvent >= 10) || (cw == new_cw)) { // 100ms
 
         putEvent(new_cw ? EVT_ROTARY_RIGHT : EVT_ROTARY_LEFT);
-#if !defined(HARDWARE_TRIMS)
-        if (g_trimEditMode != EDIT_TRIM_DISABLED) {
-          uint8_t key = (g_trimEditMode - 1) * 2;
-          if (new_cw) {
-            g_trimState = 0x01 << key;
-          }
-          else {
-            g_trimState = 0x01 << (key + 1);
-          }
-        }
-#endif
+
         // rotary encoder navigation speed (acceleration) detection/calculation
         static uint32_t delay = 2*ROTENC_DELAY_MIDSPEED;
 
@@ -301,6 +275,7 @@ void generalDefault()
 #if defined(LCD_CONTRAST_DEFAULT)
   g_eeGeneral.contrast = LCD_CONTRAST_DEFAULT;
 #endif
+  g_eeGeneral.contrast=25;
 
 #if defined(DEFAULT_POTS_CONFIG)
   g_eeGeneral.potsConfig = DEFAULT_POTS_CONFIG;
@@ -333,27 +308,8 @@ void generalDefault()
 
   g_eeGeneral.ttsLanguage[0] = 'e';
   g_eeGeneral.ttsLanguage[1] = 'n';
-
-#if defined(RADIO_FAMILY_TBS)
-  g_eeGeneral.wavVolume         = 1;
-  g_eeGeneral.backgroundVolume  = 0;
-  g_eeGeneral.beepMode          = 1;
-  g_eeGeneral.beepVolume        = -1;
-  g_eeGeneral.beepLength        = -1;
-  g_eeGeneral.speakerPitch      = 2;
-  g_eeGeneral.hapticLength      = -1;
-  g_eeGeneral.hapticMode        = 1;
-#if defined(RADIO_MAMBO)
-  g_eeGeneral.hapticStrength    = -1;
-#endif
-  g_eeGeneral.lightAutoOff      = 12;
-  g_eeGeneral.templateSetup     = 17; /* TAER */
-  g_eeGeneral.jitterFilter      = 0;
-  g_eeGeneral.txVoltageCalibration = BATT_CALIB_OFFSET;
-#else
   g_eeGeneral.wavVolume = 2;
   g_eeGeneral.backgroundVolume = 1;
-#endif
 
   for (int i=0; i<NUM_STICKS; ++i) {
     g_eeGeneral.trainer.mix[i].mode = 2;
@@ -383,8 +339,15 @@ void generalDefault()
   // Those settings are for headless radio
   g_eeGeneral.USBMode = USB_JOYSTICK_MODE;
   g_eeGeneral.disableRtcWarning = 1;
-  g_eeGeneral.splashMode = 3; // Disable splash
-  g_eeGeneral.pwrOnSpeed = 1; // 1 second
+  g_eeGeneral.splashMode =  3; // Disable splash
+  g_eeGeneral.pwrOnSpeed =  0; // 1 second
+  g_eeGeneral.pwrOffSpeed = 0;
+#endif
+
+#if defined(RADIO_T8)
+  g_eeGeneral.splashMode =  3; // Disable splash
+  g_eeGeneral.pwrOnSpeed =  2; // 1 second
+  g_eeGeneral.pwrOffSpeed = 2;
 #endif
 
   g_eeGeneral.chkSum = 0xFFFF;
@@ -436,30 +399,12 @@ void applyDefaultTemplate()
 {
   defaultInputs(); // calls storageDirty internally
 
-#if defined(FUNCTION_SWITCHES)
-  g_model.functionSwitchConfig = DEFAULT_FS_CONFIG;
-  g_model.functionSwitchGroup = DEFAULT_FS_GROUPS;
-  g_model.functionSwitchStartConfig = DEFAULT_FS_STARTUP_CONFIG;
-  g_model.functionSwitchLogicalState = 0;
-#endif
-
   for (int i=0; i<NUM_STICKS; i++) {
     MixData * mix = mixAddress(i);
     mix->destCh = i;
     mix->weight = 100;
     mix->srcRaw = i+1;
   }
-#if defined(RADIO_FAMILY_TBS)
-  for (int i = 0; i < NUM_SWITCHES; i++) {
-    MixData * mix = mixAddress(i+4);
-    mix->destCh = i+4;
-    mix->weight = 100;
-    if (i >= NUM_SWITCHES)
-      mix->srcRaw = MIXSRC_FIRST_POT+i-NUM_SWITCHES;  // for the POTs
-    else
-      mix->srcRaw = MIXSRC_SA+i;                      // for the SWITCHes
-  }
-#endif
 }
 
 #if defined(EEPROM)
@@ -538,24 +483,6 @@ uint8_t findNextUnusedModelId(uint8_t index, uint8_t module)
   // failed finding something...
   return 0;
 }
-#elif defined(EEPROM_SDCARD)
-#include "storage/modelslist.h"
-void checkModelIdUnique(uint8_t module)
-{
-  if (isModuleXJTD8(module))
-    return;
-
-  char * warn_buf = reusableBuffer.moduleSetup.msg;
-
-  // cannot rely exactly on WARNING_LINE_LEN so using WARNING_LINE_LEN-2
-  size_t warn_buf_len = sizeof(reusableBuffer.moduleSetup.msg) - WARNING_LINE_LEN - 2;
-  if (!modelslist.isModelIdUnique(module,warn_buf,warn_buf_len)) {
-    if (warn_buf[0] != 0) {
-      POPUP_WARNING(STR_MODELIDUSED);
-      SET_WARNING_INFO(warn_buf, sizeof(reusableBuffer.moduleSetup.msg), 0);
-    }
-  }
-}
 #endif
 
 void modelDefault(uint8_t id)
@@ -611,8 +538,6 @@ void modelDefault(uint8_t id)
   for (int i=0; i<NUM_SWITCHES; i++) {
     g_model.switchWarningState |= (1 << (3*i));
   }
-#elif NUM_POTS == 0
-  g_model.potsWarnMode = POTS_WARN_OFF;
 #endif
 
 #if defined(RADIOMASTER_RTF_RELEASE)
@@ -766,11 +691,7 @@ bool inputsMoved()
 {
   uint8_t sum = 0;
   for (uint8_t i=0; i<NUM_STICKS+NUM_POTS+NUM_SLIDERS; i++)
-#if defined(RADIO_FAMILY_TBS)
-    sum += ((int16_t)anaIn(i) + 4096) >> INAC_STICKS_SHIFT;
-#else
     sum += anaIn(i) >> INAC_STICKS_SHIFT;
-#endif
   for (uint8_t i=0; i<NUM_SWITCHES; i++)
     sum += getValue(MIXSRC_FIRST_SWITCH+i) >> INAC_SWITCHES_SHIFT;
 #if defined(GYRO)
@@ -1105,7 +1026,7 @@ void checkThrottleStick()
   bool refresh = false;
 #endif
 
-  while (!keyDown()) {
+  while (!getEvent()) {
     if (!isThrottleWarningAlertNeeded()) {
       return;
     }
@@ -1330,10 +1251,6 @@ tmr10ms_t jitterResetTime = 0;
 #if !defined(SIMU)
 uint16_t anaIn(uint8_t chan)
 {
-#if defined(RADIO_FAMILY_TBS)
-  if( chan <= STICK4 )
-    return crossfireSharedData.sticks[chan];
-#endif
   return ANA_FILT(chan);
 }
 
@@ -1393,11 +1310,7 @@ void getADC()
     //   * <out> = s_anaFilt[x]
     uint16_t previous = s_anaFilt[x] / JITTER_ALPHA;
     uint16_t diff = (v > previous) ? (v - previous) : (previous - v);
-#if defined(RADIO_FAMILY_TBS)
-    if (x > STICK4 && !g_eeGeneral.jitterFilter && diff < (10*ANALOG_MULTIPLIER)) {
-#else
     if (!g_eeGeneral.jitterFilter && diff < (10*ANALOG_MULTIPLIER)) { // g_eeGeneral.jitterFilter is inverted, 0 - active
-#endif
       // apply jitter filter
       s_anaFilt[x] = (s_anaFilt[x] - previous) + v;
     }
@@ -1609,9 +1522,8 @@ void doMixerPeriodicUpdates()
       s_cnt_1s += 1;
 
       logicalSwitchesTimerTick();
-#if defined(TRAINER_GPIO)
       checkTrainerSignalWarning();
-#endif
+
       if (s_cnt_1s >= 10) { // 1sec
         s_cnt_1s -= 10;
         sessionTimer += 1;
@@ -1704,12 +1616,6 @@ void opentxStart(const uint8_t startOptions = OPENTX_START_DEFAULT_ARGS)
 
 #if defined(TEST_BUILD_WARNING)
   ALERT(STR_TEST_WARNING, TR_TEST_NOTSAFE, AU_ERROR);
-#endif
-
-#if defined(FUNCTION_SWITCHES)
-  if (!UNEXPECTED_SHUTDOWN()) {
-    setFSStartupPosition();
-  }
 #endif
 
 #if defined(GUI)
@@ -2017,7 +1923,7 @@ void opentxInit()
 
   BACKLIGHT_ENABLE(); // we start the backlight during the startup animation
 
-#if defined(STARTUP_ANIMATION) && !defined(RADIO_FAMILY_TBS)
+#if defined(STARTUP_ANIMATION)
   if (WAS_RESET_BY_WATCHDOG_OR_SOFTWARE()) {
     pwrOn();
   }
@@ -2108,23 +2014,6 @@ void opentxInit()
 #endif
 #endif  // #if !defined(EEPROM)
 
-#if defined(RADIO_FAMILY_TBS) && !defined(SIMU)
-  // read the settings (especailly power on delay) from sdcard first then run the startup animation
-  if (WAS_RESET_BY_WATCHDOG() || bkregGetStatusFlag(STORAGE_ERASE_STATUS) || getBoardOffState()) {
-    if(bkregGetStatusFlag(STORAGE_ERASE_STATUS))
-      bkregClrStatusFlag(STORAGE_ERASE_STATUS);
-    pwrOn();
-    g_eeGeneral.backlightMode = e_backlight_mode_all;
-  }
-  else {
-    runStartupAnimation();
-  }
-  if (g_model.moduleData[INTERNAL_MODULE].type == MODULE_TYPE_CROSSFIRE)
-    crossfireTurnOnRf();
-  else
-    crossfireTurnOffRf(false);
-#endif
-
 #if defined(AUX_SERIAL)
   auxSerialInit(g_eeGeneral.auxSerialMode, modelTelemetryProtocol());
 #endif
@@ -2174,24 +2063,7 @@ void opentxInit()
   }
 
   if (!globalData.unexpectedShutdown) {
-#if defined(BATT_CRITICAL_SHUTDOWN)
-    uint8_t cnt = 0;
-    uint32_t timestamp = 0;
-    while(1) {
-      if (get_tmr10ms() != timestamp) {
-        timestamp = get_tmr10ms();
-        getADC();
-        if (cnt++ >= 10)
-          break;
-      }
-    }
-    if(getBoardOffState() || getBatteryVoltage() / 10 <= BATTERY_CRITICAL)
-      opentxStart(OPENTX_START_NO_SPLASH | OPENTX_START_NO_CHECKS);
-    else
-      opentxStart();
-#else
     opentxStart();
-#endif
   }
 
 #if !defined(RTC_BACKUP_RAM)

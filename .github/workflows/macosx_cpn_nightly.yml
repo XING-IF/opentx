@@ -2,7 +2,7 @@ name: MacOSX nightly Companion
 
 on:
   schedule:
-    - cron:  '47 4 * * *'
+    - cron:  '20 22 * * *'
 
   workflow_dispatch:
 
@@ -16,7 +16,7 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: macos-10.15
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -99,13 +99,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: companion-nightly
-          
-      - name: Display structure of downloaded files
-        run: ls -R
-  
-      - uses: pyTooling/Actions/releaser@main
+      - uses: eine/tip@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: 'nightly'
-          files: opentx-companion*.*
           rm: true
+          files: ./*

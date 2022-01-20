@@ -90,11 +90,6 @@ end
 local function selectField(step)
   local newLineIndex = lineIndex
   local field
- 
-  if newLineIndex == 0 then
-    return
-  end
-  
   repeat
     newLineIndex = newLineIndex + step
     if newLineIndex == 0 then

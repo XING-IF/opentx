@@ -343,10 +343,8 @@ RawSource RawSource::convert(RadioDataConversionState & cstate)
   if (type == SOURCE_TYPE_STICK) {
     QStringList fromStickList(getStickList(cstate.fromBoard));
     QStringList toStickList(getStickList(cstate.toBoard));
-    if (oldData.id < fromStickList.count())
-      index = toStickList.indexOf(fromStickList.at(oldData.id));
-    else
-      index = -1;
+    index = toStickList.indexOf(fromStickList.at(oldData.id));
+    // index set to -1 if no match found
     // perform forced mapping
   }
 

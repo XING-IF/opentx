@@ -268,6 +268,7 @@ int main()
 
   // init screen
   bootloaderInitScreen();
+  lcdSetRefVolt(24);
 
 #if defined(PWR_BUTTON_PRESS)
   // wait until power button is released
@@ -507,9 +508,22 @@ int main()
         boardOff();
       }
     }
-
-    if (state == ST_REBOOT) {
+// #define FW                             6
+// #define FWNUM                          5
+// #define FH                             8
+    // lcdDrawText(3*FW, 2*FH, "Write Firmware", opt == 0 ? INVERS : 0);
+    // lcdDrawText(3*FW, 3*FH, "Restore EEPROM", opt == 1 ? INVERS : 0);
+    // lcdDrawText(3*FW, 4*FH, "Exit", opt == 2 ? INVERS : 0);
+  //     lcdDrawText(LCD_W / 2, 0, BOOTLOADER_TITLE, CENTERED);
+  // lcdInvertLine(0);
+    if (state == ST_REBOOT) 
+    {
       lcdClear();
+      // lcdDrawText(0, 16,"  Please short press");
+      lcdDrawText(2, 22,"Press the power button.");
+      lcdDrawText(2, 33,"Exit the flashing mode.");
+      //lcdInvertLine(32);
+      //lcdDrawSolidFilledRect(0, 32, 128, 2, TEXT_COLOR);
       lcdRefresh();
       lcdRefreshWait();
 
@@ -517,8 +531,8 @@ int main()
       rtcInit();
       RTC->BKP0R = SOFTRESET_REQUEST;
 #endif
-
-      NVIC_SystemReset();
+      while(1);
+     //NVIC_SystemReset();
     }
   }
 

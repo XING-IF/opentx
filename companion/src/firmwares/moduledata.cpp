@@ -26,29 +26,7 @@
 
 void ModuleData::convert(RadioDataConversionState & cstate)
 {
-  Firmware *fw = getCurrentFirmware();
-
-  cstate.setSubComp(indexToString(cstate.subCompIdx, fw));
-  cstate.setItemType("Protocol", 1);
-  RadioDataConversionState::EventType evt = RadioDataConversionState::EVT_NONE;
-  RadioDataConversionState::LogField oldData(protocol, protocolToString(protocol));
-
-  if (fw->getBoard() == cstate.toType) {
-    if (cstate.subCompIdx < fw->getCapability(NumFirstUsableModule) || cstate.subCompIdx > fw->getCapability(NumModules) - 1) {
-      if ((PulsesProtocol) protocol != PULSES_OFF)
-        evt = RadioDataConversionState::EVT_INV;
-    }
-    else if (!fw->isAvailable((PulsesProtocol) protocol, cstate.subCompIdx)) {
-      evt = RadioDataConversionState::EVT_INV;
-    }
-  }
-  else {
-    evt = RadioDataConversionState::EVT_INV;
-    qDebug() << "Error - current firmware board does not match conversion to board!";
-  }
-
-  if (evt == RadioDataConversionState::EVT_INV) {
-    cstate.setInvalid(oldData);
+  if (protocol == PULSES_PXX_R9M && (IS_TARANIS_XLITE(cstate.fromType) || IS_TARANIS_XLITE(cstate.toType))) {
     clear();
   }
 }

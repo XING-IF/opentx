@@ -24,7 +24,6 @@ int16_t ppmInput[MAX_TRAINER_CHANNELS];
 uint8_t ppmInputValidityTimer;
 uint8_t currentTrainerMode = 0xff;
 
-#if defined(TRAINER_GPIO)
 void checkTrainerSignalWarning()
 {
   enum {
@@ -101,11 +100,6 @@ void stopTrainer()
         aux2SerialStop();
 #endif
       break;
-#if defined(TRAINER_SPORT_SBUS)
-    case TRAINER_MODE_MASTER_SBUS_SPORT:
-      telemetryInit(modelTelemetryProtocol());
-      EXTERNAL_MODULE_OFF();
-#endif
 #endif
   }
 
@@ -162,14 +156,6 @@ void checkTrainerSettings()
       case TRAINER_MODE_MASTER_TRAINER_JACK:
         init_trainer_capture();
         break;
-
-#if defined(TRAINER_SPORT_SBUS)
-      case TRAINER_MODE_MASTER_SBUS_SPORT:
-        telemetryPortInit(SBUS_BAUDRATE, TELEMETRY_SERIAL_WITHOUT_DMA);
-        telemetryPortSetDirectionInput();
-        EXTERNAL_MODULE_ON();
-        break;
-#endif
     }
 
 #if defined(TRAINER_MODULE_CPPM) || defined(TRAINER_MODULE_SBUS)
@@ -187,5 +173,4 @@ void checkTrainerSettings()
 #endif
   }
 }
-#endif
 #endif

@@ -78,14 +78,6 @@
 #define USBD_HID_CONFIGURATION_FS_STRING    "HID Config"
 #define USBD_HID_INTERFACE_FS_STRING        "HID Interface"
 
-#if defined(RADIO_FAMILY_TBS)
-#define USBD_AGENT_VID                      0x04D8
-#define USBD_AGENT_PID                      0xF94C
-#define USBD_AGENT_PRODUCT_FS_STRING        USB_NAME MY_DEVICE_NAME
-#define USBD_AGENT_CONFIGURATION_FS_STRING  "HID Config"
-#define USBD_AGENT_INTERFACE_FS_STRING      "HID Interface"
-#endif
-
 #define USBD_CDC_VID                        USBD_VID_STM
 #define USBD_CDC_PID                        0x5740     // do not change, this ID is used by the ST USB driver for Windows
 #define USBD_CDC_PRODUCT_FS_STRING          USB_NAME " Serial Port"
@@ -139,25 +131,15 @@ __ALIGN_BEGIN uint8_t USBD_StrDesc[USB_MAX_STR_DESC_SIZ] __ALIGN_END ;	// modifi
 */
 uint8_t * USBD_USR_DeviceDescriptor( uint8_t speed , uint16_t *length)
 {
-  int vid = 0, pid = 0;
+  int vid, pid;
 
   switch (getSelectedUsbMode()) {
     case USB_JOYSTICK_MODE:
       vid = USBD_HID_VID;
       pid = USBD_HID_PID;
       break;
-#if defined(RADIO_FAMILY_TBS)
-    case USB_AGENT_MODE:
-      vid = USBD_AGENT_VID;
-      pid = USBD_AGENT_PID;
-      break;
-#endif
 
-#if defined(DEBUG)
     case USB_SERIAL_MODE:
-#else
-    case USB_TELEMETRY_MIRROR_MODE:
-#endif
       vid = USBD_CDC_VID;
       pid = USBD_CDC_PID;
       break;
@@ -228,21 +210,9 @@ uint8_t *  USBD_USR_ProductStrDescriptor( uint8_t speed , uint16_t *length)
     case USB_JOYSTICK_MODE:
       USBD_GetString ((uint8_t*)USBD_HID_PRODUCT_FS_STRING, USBD_StrDesc, length);
       break;
-
-#if defined(RADIO_FAMILY_TBS)
-    case USB_AGENT_MODE:
-      USBD_GetString ((uint8_t*)USBD_AGENT_PRODUCT_FS_STRING, USBD_StrDesc, length);
-      break;
-#endif
-#if defined(DEBUG)
-
     case USB_SERIAL_MODE:
-#else
-    case USB_TELEMETRY_MIRROR_MODE:
-#endif
       USBD_GetString ((uint8_t*)USBD_CDC_PRODUCT_FS_STRING, USBD_StrDesc, length);
       break;
-
     case USB_MASS_STORAGE_MODE:
       USBD_GetString ((uint8_t*)USBD_MSC_PRODUCT_FS_STRING, USBD_StrDesc, length);
       break;
@@ -290,16 +260,7 @@ uint8_t *  USBD_USR_ConfigStrDescriptor( uint8_t speed , uint16_t *length)
     case USB_JOYSTICK_MODE:
       USBD_GetString ((uint8_t*)USBD_HID_CONFIGURATION_FS_STRING, USBD_StrDesc, length);
       break;
-#if defined(RADIO_FAMILY_TBS)
-    case USB_AGENT_MODE:
-      USBD_GetString ((uint8_t*)USBD_AGENT_CONFIGURATION_FS_STRING, USBD_StrDesc, length);
-      break;
-#endif
-#if defined(DEBUG)
     case USB_SERIAL_MODE:
-#else
-    case USB_TELEMETRY_MIRROR_MODE:
-#endif
       USBD_GetString ((uint8_t*)USBD_CDC_CONFIGURATION_FS_STRING, USBD_StrDesc, length);
       break;
     case USB_MASS_STORAGE_MODE:
@@ -323,17 +284,7 @@ uint8_t *  USBD_USR_InterfaceStrDescriptor( uint8_t speed , uint16_t *length)
     case USB_JOYSTICK_MODE:
       USBD_GetString ((uint8_t*)USBD_HID_INTERFACE_FS_STRING, USBD_StrDesc, length);
       break;
-#if defined(RADIO_FAMILY_TBS)
-    case USB_AGENT_MODE:
-      USBD_GetString ((uint8_t*)USBD_AGENT_INTERFACE_FS_STRING, USBD_StrDesc, length);
-      break;
-#endif
-
-#if defined(DEBUG)
     case USB_SERIAL_MODE:
-#else
-    case USB_TELEMETRY_MIRROR_MODE:
-#endif
       USBD_GetString ((uint8_t*)USBD_CDC_INTERFACE_FS_STRING, USBD_StrDesc, length);
       break;
     case USB_MASS_STORAGE_MODE:

@@ -42,9 +42,8 @@ class ModelCell
 public:
   char modelFilename[LEN_MODEL_FILENAME + 1];
   char modelName[LEN_MODEL_NAME + 1];
-#if !defined(MODEL_HAVE_NO_BITMAP)
   BitmapBuffer * buffer;
-#endif
+
   bool             valid_rfData;
   uint8_t          modelId[NUM_MODULES];
   SimpleModuleData moduleData[NUM_MODULES];
@@ -62,9 +61,7 @@ public:
 
   bool  fetchRfData();
   void  loadBitmap();
-#if !defined(MODEL_HAVE_NO_BITMAP)
   const BitmapBuffer * getBuffer();
-#endif
   void  resetBuffer();
 };
 

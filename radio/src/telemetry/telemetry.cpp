@@ -41,7 +41,7 @@ void processTelemetryData(uint8_t data)
 {
 #if defined(CROSSFIRE)
   if (telemetryProtocol == PROTOCOL_TELEMETRY_CROSSFIRE) {
-    processCrossfireTelemetryData(data, EXTERNAL_MODULE);
+    processCrossfireTelemetryData(data);
     return;
   }
 #endif
@@ -132,18 +132,6 @@ void telemetryWakeup()
       processMultiTelemetryData(data, INTERNAL_MODULE);
       LOG_TELEMETRY_WRITE_BYTE(data);
     } while (intmoduleFifo.pop(data));
-  }
-#endif
-
-#if defined(INTERNAL_MODULE_CRSF) && !defined(SIMU)
-  if (IS_INTERNAL_MODULE_ENABLED()) {
-    if (intCrsfTelemetryFifo.pop(data)) {
-      LOG_TELEMETRY_WRITE_START();
-      do {
-        processCrossfireTelemetryData(data, INTERNAL_MODULE);
-        LOG_TELEMETRY_WRITE_BYTE(data);
-      } while (intCrsfTelemetryFifo.pop(data));
-    }
   }
 #endif
 
@@ -292,11 +280,6 @@ void telemetryInit(uint8_t protocol)
 {
   telemetryProtocol = protocol;
 
-#if defined(TRAINER_SPORT_SBUS)
-  if (g_model.trainerData.mode == TRAINER_MODE_MASTER_SBUS_SPORT)
-    return;
-#endif
-
   if (protocol == PROTOCOL_TELEMETRY_FRSKY_D) {
     telemetryPortInit(FRSKY_D_BAUDRATE, TELEMETRY_SERIAL_DEFAULT);
   }
@@ -388,10 +371,6 @@ void logTelemetryWriteByte(uint8_t data)
 }
 #endif
 
-#if defined(RADIO_FAMILY_TBS)
-uint8_t outputTelemetryBufferTrigger = 0;
-#endif
-
 OutputTelemetryBuffer outputTelemetryBuffer __DMA;
 
 #if defined(LUA)
@@ -423,7 +402,7 @@ void ModuleSyncStatus::update(uint16_t newRefreshRate, int16_t newInputLag)
 {
   if (!newRefreshRate)
     return;
-
+  
   if (newRefreshRate < MIN_REFRESH_RATE)
     newRefreshRate = newRefreshRate * (MIN_REFRESH_RATE / (newRefreshRate + 1));
   else if (newRefreshRate > MAX_REFRESH_RATE)
@@ -445,9 +424,9 @@ uint16_t ModuleSyncStatus::getAdjustedRefreshRate()
   if (lag == 0) {
     return refreshRate;
   }
-
+  
   newRefreshRate += lag;
-
+  
   if (newRefreshRate < MIN_REFRESH_RATE) {
       newRefreshRate = MIN_REFRESH_RATE;
   }
@@ -457,7 +436,7 @@ uint16_t ModuleSyncStatus::getAdjustedRefreshRate()
 
   currentLag -= newRefreshRate - refreshRate;
   TRACE("[SYNC] mod rate = %dus; lag = %dus",newRefreshRate,currentLag);
-
+  
   return (uint16_t)newRefreshRate;
 }
 

@@ -32,7 +32,6 @@
 #include "logicalswitches.h"
 #include "customfunctions.h"
 #include "telemetry.h"
-#include "telemetry_customscreens.h"
 #include "appdata.h"
 #include "compounditemmodels.h"
 
@@ -103,11 +102,6 @@ ModelEdit::ModelEdit(QWidget * parent, RadioData & radioData, int modelId, Firmw
   if (firmware->getCapability(Telemetry)) {
     addTab(new TelemetryPanel(this, model, generalSettings, firmware, sharedItemModels), tr("Telemetry"));
     s1.report("Telemetry");
-  }
-
-  if (firmware->getCapability(TelemetryCustomScreens)) {
-    addTab(new TelemetryCustomScreensPanel(this, model, generalSettings, firmware, sharedItemModels), tr("Custom Screens"));
-    s1.report("Telemetry Custom Screens");
   }
 
   connect(setupPanel, &SetupPanel::extendedLimitsToggled, channelsPanel, &ChannelsPanel::refreshExtendedLimits);

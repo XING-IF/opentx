@@ -54,10 +54,6 @@ void rotaryEncoderEnd();
 #define STORAGE_NUM_SWITCHES           NUM_SWITCHES
 #define NUM_SWITCHES_POSITIONS         9
 
-#if !defined(NUM_FUNCTIONS_SWITCHES)
-#define NUM_FUNCTIONS_SWITCHES          0
-#endif
-
 enum EnumKeys
 {
   KEY_MENU,
@@ -273,7 +269,7 @@ extern "C" {
 #endif
 
 // Backlight driver
-#define backlightEnable(x)             (PWM->PWM_CH_NUM[0].PWM_CDTY = currentBacklightBright)
+#define backlightEnable()              (PWM->PWM_CH_NUM[0].PWM_CDTY = currentBacklightBright)
 #define backlightDisable()             (PWM->PWM_CH_NUM[0].PWM_CDTY = 100)
 #define isBacklightEnabled()           (PWM->PWM_CH_NUM[0].PWM_CDTY != 100)
 #define BACKLIGHT_ENABLE()             backlightEnable()

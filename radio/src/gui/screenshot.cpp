@@ -62,9 +62,11 @@ const char * writeScreenshot()
     return error;
   }
 
+#if defined(RTCLOCK)
   char * tmp = strAppend(&filename[sizeof(SCREENSHOTS_PATH)-1], "/screen");
   tmp = strAppendDate(tmp, true);
   strcpy(tmp, BMP_EXT);
+#endif
 
   FRESULT result = f_open(&bmpFile, filename, FA_CREATE_ALWAYS | FA_WRITE);
   if (result != FR_OK) {
@@ -89,13 +91,8 @@ const char * writeScreenshot()
     }
   }
 #else
-#if LCD_H > 64
-  for (int y=0; y<LCD_H; y++) {
-    for (int x=LCD_W-2; x>=0; x-=2) {
-#else
   for (int y=LCD_H-1; y>=0; y-=1) {
     for (int x=0; x<8*((LCD_W+7)/8); x+=2) {
-#endif
       display_t byte = getPixel(x+1, y) + (getPixel(x, y) << 4);
       if (f_write(&bmpFile, &byte, 1, &written) != FR_OK || written != 1) {
         f_close(&bmpFile);

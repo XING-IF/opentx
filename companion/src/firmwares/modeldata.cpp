@@ -210,17 +210,6 @@ void ModelData::setDefaultMixes(const GeneralSettings & settings)
   }
 }
 
-void ModelData::setDefaultFunctionSwitches(int functionSwitchCount)
-{
-  if (functionSwitchCount == 0)
-    return;
-
-  for (int i = 0; i < functionSwitchCount; i++) {
-    functionSwitchConfig |= (Board::SWITCH_2POS << 2 * i);
-    functionSwitchGroup |= (1 << 2 * i);
-  }
-}
-
 void ModelData::setDefaultValues(unsigned int id, const GeneralSettings & settings)
 {
   clear();
@@ -230,7 +219,6 @@ void ModelData::setDefaultValues(unsigned int id, const GeneralSettings & settin
     moduleData[i].modelId = id + 1;
   }
   setDefaultMixes(settings);
-  setDefaultFunctionSwitches(getCurrentFirmware()->getCapability(FunctionSwitches));
 }
 
 int ModelData::getTrimValue(int phaseIdx, int trimIdx)
@@ -420,25 +408,6 @@ void ModelData::convert(RadioDataConversionState & cstate)
     thrTraceSrc = RawSource(SOURCE_TYPE_STICK, (int)thrTraceSrc + 3).convert(cstate).index - 3;
   }
 
-  Firmware *fw = getCurrentFirmware();
-
-  if (fw->getCapability(HasModelImage) && bitmap[0] != '\0') {
-    QString filename = bitmap;
-    QFileInfo file(filename);
-    if (fw->getCapability(ModelImageKeepExtn) && file.suffix() == "")
-      filename.append(".bmp");  // bmp is assumed default for radios that do not store file extension
-    else if (!fw->getCapability(ModelImageKeepExtn) && file.suffix() != "") {
-      int posn = filename.indexOf("." % file.suffix(), + 1);
-      filename.remove(posn, filename.size() - posn + 1);
-    }
-    memset(bitmap, 0, CPN_MAX_BITMAP_LEN);
-    strncpy(bitmap, filename.toLatin1().data(), fw->getCapability(ModelImageNameLen));
-  }
-
-  for (int i = 0; i < CPN_MAX_MODULES; i++) {
-    moduleData[i].convert(cstate.withComponentIndex(i));
-  }
-
   for (int i = 0; i < CPN_MAX_TIMERS; i++) {
     timers[i].convert(cstate.withComponentIndex(i));
   }
@@ -461,6 +430,10 @@ void ModelData::convert(RadioDataConversionState & cstate)
 
   for (int i = 0; i < CPN_MAX_FLIGHT_MODES; i++) {
     flightModeData[i].convert(cstate.withComponentIndex(i));
+  }
+
+  for (int i = 0; i < CPN_MAX_MODULES; i++) {
+    moduleData[i].convert(cstate.withComponentIndex(i));
   }
 }
 

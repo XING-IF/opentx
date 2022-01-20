@@ -450,10 +450,6 @@ PACK(struct ModuleData {
       uint8_t spare2:1;
       int8_t refreshRate;  // definition as framelength for ppm (* 5 + 225 = time in 1/10 ms)
     } sbus);
-    NOBACKUP(struct {
-      uint8_t raw12bits:1;
-      uint8_t spare1:7;
-    } ghost);
     NOBACKUP(PACK(struct {
       uint8_t receivers:7; // 4 bits spare
       uint8_t racingMode:1;
@@ -521,7 +517,7 @@ typedef uint32_t swarnstate_t;
 typedef uint64_t swconfig_t;
 typedef uint64_t swarnstate_t;
 typedef uint32_t swarnenable_t;
-#elif defined(PCBX9D) || defined(PCBX9DP) || defined(RADIO_TPRO)
+#elif defined(PCBX9D) || defined(PCBX9DP)
 typedef uint32_t swconfig_t;
 typedef uint32_t swarnstate_t;
 typedef uint16_t swarnenable_t; // TODO remove it in 2.4
@@ -576,18 +572,6 @@ PACK(struct CustomScreenData {
 #else
   #define SCRIPT_DATA
 #endif
-
-#if defined(FUNCTION_SWITCHES) && NUM_FUNCTIONS_SWITCHES < 8
-  #define FUNCTION_SWITCHS_FIELDS \
-    uint16_t functionSwitchConfig;  \
-    uint16_t functionSwitchGroup; \
-    uint16_t functionSwitchStartConfig; \
-    uint8_t functionSwitchLogicalState;  \
-    char switchNames[NUM_FUNCTIONS_SWITCHES][LEN_SWITCH_NAME];
-#else
-  #define FUNCTION_SWITCHS_FIELDS
-#endif
-
 
 PACK(struct ModelData {
   ModelHeader header;
@@ -650,8 +634,6 @@ PACK(struct ModelData {
   CUSTOM_SCREENS_DATA
 
   char modelRegistrationID[PXX2_LEN_REGISTRATION_ID];
-
-  FUNCTION_SWITCHS_FIELDS
 
 
   uint8_t getThrottleStickTrimSource() const
@@ -731,14 +713,6 @@ PACK(struct TrainerData {
   #else
     #define BLUETOOTH_FIELDS
   #endif
-
-#if defined(EEPROM_SDCARD)
-  #define MODEL_FILE_NAME_FIELD \
-  NOBACKUP(char currModelFilename[LEN_MODEL_FILENAME+1]);
-#else
-  #define MODEL_FILE_NAME_FIELD
-#endif
-
   #define EXTRA_GENERAL_FIELDS \
     uint8_t  auxSerialMode:4; \
     uint8_t  slidersConfig:4; \
@@ -746,9 +720,8 @@ PACK(struct TrainerData {
     uint8_t  backlightColor; \
     swarnstate_t switchUnlockStates; \
     swconfig_t switchConfig; \
-    char switchNames[STORAGE_NUM_SWITCHES - NUM_FUNCTIONS_SWITCHES][LEN_SWITCH_NAME]; \
+    char switchNames[STORAGE_NUM_SWITCHES][LEN_SWITCH_NAME]; \
     char anaNames[NUM_STICKS+STORAGE_NUM_POTS+STORAGE_NUM_SLIDERS][LEN_ANA_NAME]; \
-    MODEL_FILE_NAME_FIELD \
     BLUETOOTH_FIELDS
 #elif defined(PCBSKY9X)
   #define EXTRA_GENERAL_FIELDS \
@@ -780,21 +753,6 @@ PACK(struct TrainerData {
   #define BUZZER_FIELD int8_t buzzerMode:2    // -2=quiet, -1=only alarms, 0=no keys, 1=all (only used on AVR radios without audio hardware)
 #else
   #define BUZZER_FIELD int8_t spare4:2
-#endif
-
-#if defined(ENABLE_ROTARY_INVERSE)
-  #define ROTARY_MODE \
-    NOBACKUP(uint8_t enableRotaryInverse:1);
-#else
-  #define ROTARY_MODE
-#endif
-
-#if defined(RADIO_FAMILY_TBS)
-  #define POWER_ON_SPEED    (1 + pwrOnSpeed)
-  #define POWER_OFF_SPEED   (1 + pwrOffSpeed)
-#else
-  #define POWER_ON_SPEED    (2 - pwrOnSpeed)
-  #define POWER_OFF_SPEED   (2 - pwrOffSpeed)
 #endif
 
 PACK(struct RadioData {
@@ -872,18 +830,6 @@ PACK(struct RadioData {
   char ownerRegistrationID[PXX2_LEN_REGISTRATION_ID];
 
   GYRO_FIELDS
-
-  ROTARY_MODE
-
-  NOBACKUP(uint8_t getPwrOnSpeed() const
-  {
-    return POWER_ON_SPEED;
-  });
-
-  NOBACKUP(uint8_t getPwrOffSpeed() const
-  {
-    return POWER_OFF_SPEED;
-  });
 });
 
 #undef SWITCHES_WARNING_DATA
@@ -894,7 +840,6 @@ PACK(struct RadioData {
 #undef SPLASH_MODE
 #undef EXTRA_GENERAL_FIELDS
 #undef THEME_DATA
-#undef ROTARY_MODE
 #undef NOBACKUP
 
 
@@ -1006,15 +951,6 @@ static inline void check_struct()
 #elif defined(PCBXLITE)
   CHKSIZE(RadioData, 858);
   CHKSIZE(ModelData, 6157);
-#elif defined(RADIO_TANGO)
-  CHKSIZE(RadioData, 847);
-  CHKSIZE(ModelData, 6155);
-#elif defined(RADIO_MAMBO)
-  CHKSIZE(RadioData, 865);
-  CHKSIZE(ModelData, 6157);
-#elif defined(RADIO_TPRO)
-  CHKSIZE(RadioData, 845);
-  CHKSIZE(ModelData, 6185);
 #elif defined(PCBX7)
   CHKSIZE(RadioData, 864);
   CHKSIZE(ModelData, 6157);

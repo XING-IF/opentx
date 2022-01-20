@@ -168,9 +168,6 @@ __IO uint8_t StopCondition = 0;
 __IO SD_Error TransferError = SD_OK;
 __IO uint8_t TransferEnd = 0, DMAEndOfTransfer = 0;
 SD_CardInfo SDCardInfo;
-#if defined(DISK_OPERATION_TIMEOUT)
-extern volatile uint32_t g_tmr10ms;
-#endif
 
 SDIO_InitTypeDef SDIO_InitStructure;
 SDIO_CmdInitTypeDef SDIO_CmdInitStructure;
@@ -1577,15 +1574,8 @@ OPTIMIZE("O0") static SD_Error CmdResp1Error(uint8_t cmd)
 
   status = SDIO->STA;
 
-#if defined(DISK_OPERATION_TIMEOUT)
-  volatile uint32_t tmr = g_tmr10ms;
-#endif
   while (!(status & (SDIO_FLAG_CCRCFAIL | SDIO_FLAG_CMDREND | SDIO_FLAG_CTIMEOUT))) {
     status = SDIO->STA;
-#if defined(DISK_OPERATION_TIMEOUT)
-    if (g_tmr10ms - tmr >= DISK_OPERATION_TIMEOUT)
-      break;
-#endif
   }
 
   if (status & SDIO_FLAG_CTIMEOUT) {
@@ -1706,15 +1696,8 @@ OPTIMIZE("O0") static SD_Error CmdResp3Error(void)
 
   status = SDIO->STA;
 
-#if defined(DISK_OPERATION_TIMEOUT)
-  volatile uint32_t tmr = g_tmr10ms;
-#endif
   while (!(status & (SDIO_FLAG_CCRCFAIL | SDIO_FLAG_CMDREND | SDIO_FLAG_CTIMEOUT))) {
     status = SDIO->STA;
-#if defined(DISK_OPERATION_TIMEOUT)
-    if (g_tmr10ms - tmr >= DISK_OPERATION_TIMEOUT)
-      break;
-#endif
   }
 
   if (status & SDIO_FLAG_CTIMEOUT) {
@@ -1739,15 +1722,8 @@ OPTIMIZE("O0") static SD_Error CmdResp2Error(void)
 
   status = SDIO->STA;
 
-#if defined(DISK_OPERATION_TIMEOUT)
-  volatile uint32_t tmr = g_tmr10ms;
-#endif
   while (!(status & (SDIO_FLAG_CCRCFAIL | SDIO_FLAG_CTIMEOUT | SDIO_FLAG_CMDREND))) {
     status = SDIO->STA;
-#if defined(DISK_OPERATION_TIMEOUT)
-    if (g_tmr10ms - tmr >= DISK_OPERATION_TIMEOUT)
-      break;
-#endif
   }
 
   if (status & SDIO_FLAG_CTIMEOUT) {
@@ -1782,15 +1758,8 @@ OPTIMIZE("O0") static SD_Error CmdResp6Error(uint8_t cmd, uint16_t *prca)
 
   status = SDIO->STA;
 
-#if defined(DISK_OPERATION_TIMEOUT)
-  volatile uint32_t tmr = g_tmr10ms;
-#endif
   while (!(status & (SDIO_FLAG_CCRCFAIL | SDIO_FLAG_CTIMEOUT | SDIO_FLAG_CMDREND))) {
     status = SDIO->STA;
-#if defined(DISK_OPERATION_TIMEOUT)
-    if (g_tmr10ms - tmr >= DISK_OPERATION_TIMEOUT)
-      break;
-#endif
   }
 
   if (status & SDIO_FLAG_CTIMEOUT) {
@@ -2002,18 +1971,11 @@ OPTIMIZE("O0") static SD_Error FindSCR(uint16_t rca, uint32_t *pscr)
     return errorstatus;
   }
 
-#if defined(DISK_OPERATION_TIMEOUT)
-  volatile uint32_t tmr = g_tmr10ms;
-#endif
   while (!(SDIO->STA & (SDIO_FLAG_RXOVERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DBCKEND | SDIO_FLAG_STBITERR))) {
     if (SDIO_GetFlagStatus(SDIO_FLAG_RXDAVL) != RESET) {
       *(tempscr + index) = SDIO_ReadData();
       index++;
     }
-#if defined(DISK_OPERATION_TIMEOUT)
-    if (g_tmr10ms - tmr >= DISK_OPERATION_TIMEOUT)
-      break;
-#endif
   }
 
   if (SDIO_GetFlagStatus(SDIO_FLAG_DTIMEOUT) != RESET) {

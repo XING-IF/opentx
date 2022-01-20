@@ -53,10 +53,7 @@ enum Capability {
   VoicesAsNumbers,
   VoicesMaxLength,
   MultiLangVoice,
-  HasModelImage,
-  ModelImageNameLen,
-  ModelImageFilters,
-  ModelImageKeepExtn,
+  ModelImage,
   CustomFunctions,
   SafetyChannelCustomFunction,
   LogicalSwitches,
@@ -161,8 +158,7 @@ enum Capability {
   HasBluetooth,
   HasAntennaChoice,
   HasADCJitterFilter,
-  HasTelemetryBaudrate,
-  FunctionSwitches
+  HasTelemetryBaudrate
 };
 
 class EEPROMInterface
@@ -350,8 +346,6 @@ class Firmware
     }
 
     virtual int getCapability(Capability) = 0;
-
-    virtual QString getCapabilityStr(Capability) = 0;
 
     virtual QString getAnalogInputName(unsigned int index) = 0;
 

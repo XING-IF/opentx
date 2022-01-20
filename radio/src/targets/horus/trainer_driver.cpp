@@ -21,7 +21,6 @@
 #include "opentx.h"
 
 void trainerSendNextFrame();
-extern Fifo<uint8_t, TELEMETRY_FIFO_SIZE> telemetryNoDMAFifo;
 
 void init_trainer_ppm()
 {
@@ -167,11 +166,6 @@ int sbusGetByte(uint8_t * byte)
       if (aux2SerialMode == UART_MODE_SBUS_TRAINER)
         return aux2SerialRxFifo.pop(*byte);
 #endif
-      return false;
-#endif
-#if defined(TRAINER_SPORT_SBUS)
-    case TRAINER_MODE_MASTER_SBUS_SPORT:
-      return telemetryNoDMAFifo.pop(*byte);
 #endif
     default:
       return false;

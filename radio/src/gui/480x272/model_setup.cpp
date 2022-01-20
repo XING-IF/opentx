@@ -400,6 +400,23 @@ void startRegisterDialog(uint8_t module)
   POPUP_INPUT("", runPopupRegister);
 }
 
+void checkModelIdUnique(uint8_t moduleIdx)
+{
+  if (isModuleXJTD8(moduleIdx))
+    return;
+
+  char * warn_buf = reusableBuffer.moduleSetup.msg;
+
+  // cannot rely exactly on WARNING_LINE_LEN so using WARNING_LINE_LEN-2
+  size_t warn_buf_len = sizeof(reusableBuffer.moduleSetup.msg) - WARNING_LINE_LEN - 2;
+  if (!modelslist.isModelIdUnique(moduleIdx, warn_buf, warn_buf_len)) {
+    if (warn_buf[0] != 0) {
+      POPUP_WARNING(STR_MODELIDUSED);
+      SET_WARNING_INFO(warn_buf, sizeof(reusableBuffer.moduleSetup.msg), 0);
+    }
+  }
+}
+
 void onModelSetupBitmapMenu(const char * result)
 {
   if (result == STR_UPDATE_LIST) {
@@ -1509,7 +1526,7 @@ bool menuModelSetup(event_t event)
         ModuleData & moduleData = g_model.moduleData[moduleIdx];
         if (isModulePPM(moduleIdx)) {
           lcdDrawText(MENUS_MARGIN_LEFT, y, STR_PPMFRAME);
-          lcdDrawNumber(MODEL_SETUP_2ND_COLUMN, y, (int16_t)moduleData.ppm.frameLength * PPM_STEP_SIZE + PPM_DEF_PERIOD, (menuHorizontalPosition<=0 ? attr : 0) | PREC1|LEFT, 0, NULL, STR_MS);
+          lcdDrawNumber(MODEL_SETUP_2ND_COLUMN, y, (int16_t)moduleData.ppm.frameLength*5 + 225, (menuHorizontalPosition<=0 ? attr : 0) | PREC1|LEFT, 0, NULL, STR_MS);
           lcdDrawNumber(MODEL_SETUP_2ND_COLUMN+80, y, (moduleData.ppm.delay*50)+300, (CURSOR_ON_LINE() || menuHorizontalPosition==1) ? attr|LEFT : LEFT, 0, NULL, "us");
           lcdDrawText(MODEL_SETUP_2ND_COLUMN+160, y, moduleData.ppm.pulsePol ? "+" : "-", (CURSOR_ON_LINE() || menuHorizontalPosition==2) ? attr : 0);
           if (attr && s_editMode>0) {
@@ -1528,12 +1545,12 @@ bool menuModelSetup(event_t event)
         }
         else if (isModuleSBUS(moduleIdx)) {
           lcdDrawText(MENUS_MARGIN_LEFT, y, STR_REFRESHRATE);
-          lcdDrawNumber(MODEL_SETUP_2ND_COLUMN, y, (int16_t)moduleData.sbus.refreshRate * SBUS_STEPSIZE + SBUS_DEF_PERIOD, (menuHorizontalPosition<=0 ? attr : 0) | PREC1|LEFT, 0, NULL, STR_MS);
+          lcdDrawNumber(MODEL_SETUP_2ND_COLUMN, y, (int16_t)moduleData.ppm.frameLength*5 + 225, (menuHorizontalPosition<=0 ? attr : 0) | PREC1|LEFT, 0, NULL, STR_MS);
           lcdDrawText(MODEL_SETUP_3RD_COLUMN, y, moduleData.sbus.noninverted ? "not inverted" : "normal", (CURSOR_ON_LINE() || menuHorizontalPosition==1) ? attr : 0);
           if (attr && s_editMode>0) {
             switch (menuHorizontalPosition) {
               case 0:
-                CHECK_INCDEC_MODELVAR(event, moduleData.sbus.refreshRate, (SBUS_MIN_PERIOD - SBUS_DEF_PERIOD) / SBUS_STEPSIZE, (SBUS_MAX_PERIOD - SBUS_DEF_PERIOD) / SBUS_STEPSIZE);
+                CHECK_INCDEC_MODELVAR(event, moduleData.ppm.frameLength, -33, 35);
                 break;
               case 1:
                 CHECK_INCDEC_MODELVAR_ZERO(event, moduleData.sbus.noninverted, 1);
@@ -1737,11 +1754,6 @@ bool menuModelSetup(event_t event)
           lcdDrawText(MENUS_MARGIN_LEFT, y, STR_WARN_BATTVOLTAGE);
           drawValueWithUnit(MODEL_SETUP_4TH_COLUMN, y, getBatteryVoltage(), UNIT_VOLTS, attr|PREC2|LEFT);
 #endif
-        }
-        else if (isModuleGhost(moduleIdx)) {
-          auto & module = g_model.moduleData[moduleIdx];
-          lcdDrawText(MENUS_MARGIN_LEFT + INDENT_WIDTH, y,  "Raw 12 bits");
-          module.ghost.raw12bits = editCheckBox(module.ghost.raw12bits , MODEL_SETUP_2ND_COLUMN, y, attr, event);
         }
         break;
       }

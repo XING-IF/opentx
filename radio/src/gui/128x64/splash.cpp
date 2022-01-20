@@ -23,11 +23,7 @@
 #if defined(SPLASH)
 const unsigned char splashdata[]  = {
   'S','P','S',0,
-#if LCD_H > 64
-  #include "bitmaps/128x64/splash_96.lbm"
-#else
   #include "bitmaps/128x64/splash.lbm"
-#endif
   'S','P','E',0 };
 
 const unsigned char * const splash_lbm = splashdata+4;
@@ -48,18 +44,13 @@ void drawSplash()
 }
 #endif
 
-#if defined(FRSKY_RELEASE) || defined(TBS_RELEASE)
-const unsigned char splashdata2[]  = {
 #if defined(FRSKY_RELEASE)
+const unsigned char splashdata2[]  = {
+  'S','F','S',0,
   #include "bitmaps/128x64/splash_frsky.lbm"
-#elif defined(RADIO_TANGO)
-  #include "bitmaps/128x64/splash_tango2.lbm"
-#elif defined(RADIO_MAMBO)
-  #include "bitmaps/128x64/splash_mambo.lbm"
-#endif
-};
+  'S','F','E',0 };
 
-const unsigned char * const splash2_lbm = splashdata2;
+const unsigned char * const splash2_lbm = splashdata2+4;
 
 void drawSecondSplash()
 {
@@ -68,27 +59,3 @@ void drawSecondSplash()
   lcdRefresh();
 }
 #endif
-
-#if defined(INTERNAL_MODULE_CRSF)
-const unsigned char downloaddata[]  = {
-#if defined(RADIO_TANGO)
-#include "bitmaps/128x64/download_96.lbm"
-#elif defined(RADIO_MAMBO)
-#include "bitmaps/128x64/download.lbm"
-#endif
-};
-
-const unsigned char * const download_lbm = downloaddata;
-void drawDownload()
-{
-  lcdClear();
-  lcdDraw1bitBitmap(0, 0, download_lbm, 0, 0);
-  if (getCrsfFlag(CRSF_FLAG_XF_UPDATE_REQUIRED)) {
-    clearCrsfFlag(CRSF_FLAG_XF_UPDATE_REQUIRED);
-    lcdDrawText(LCD_W>>1, LCD_H-FH, STR_UPDATE_CROSSFIRE, CENTERED);
-  }
-  lcdRefresh();
-  lcdRefreshWait();
-}
-#endif
-
