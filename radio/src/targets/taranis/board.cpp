@@ -273,7 +273,7 @@ void boardOff()
 
 #if defined (RADIO_TX12)
   #define BATTERY_DIVIDER 22830
-#elif defined (RADIO_T8)
+#elif defined (RADIO_T8) || defined(RADIO_Commando8)
   #define BATTERY_DIVIDER 50000
 #elif defined (RADIO_ZORRO)
   #define BATTERY_DIVIDER 23711 // = 2047*128*BATT_SCALE/(100*(VREF*(160+499)/160))

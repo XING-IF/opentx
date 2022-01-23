@@ -215,6 +215,24 @@ elseif(PCB STREQUAL X7)
     add_definitions(-DRADIO_T8)
     add_definitions(-DEEPROM_VARIANT=0x4004)
     add_definitions(-DMANUFACTURER_RADIOMASTER)
+  elseif(PCBREV STREQUAL Commando8)          #Modified T8 applies to commando8
+    option(INTERNAL_MODULE_MULTI "Support for MULTI internal module" ON)
+    set(EXTERNAL_MODULE YES)
+    set(AFHDS3 NO)
+    set(FLAVOUR Commando8)
+    set(NAVIGATION_TYPE x7)
+    set(CPU_TYPE STM32F2)
+    set(CPU_TYPE_FULL STM32F205xE)  # for size report
+    set(LINKER_SCRIPT targets/taranis/stm32f2_flash.ld)
+    set(ROTARY_ENCODER NO)
+    set(LUA_EXPORT lua_export_Commando8)
+    set(BLUETOOTH NO)
+    set(UNRTCLOCK YES)
+    set(BIND_KEY NO)
+    add_definitions(-DRADIO_Commando8)
+    add_definitions(-DiFlight_RELEASE)
+    add_definitions(-DEEPROM_VARIANT=0x4008)
+    add_definitions(-DMANUFACTURER_iFlight)
   elseif(PCBREV STREQUAL ACCESS)
     option(INTERNAL_MODULE_PXX1 "Support for PXX1 internal module" OFF)
     option(INTERNAL_MODULE_PXX2 "Support for PXX2 internal module" ON)
@@ -445,7 +463,14 @@ if(SPLASH STREQUAL OFF)
 endif()
 
 add_definitions(-DPCBTARANIS)
-add_definitions(-DAUDIO -DVOICE -DRTCLOCK)
+
+   #Modified T8 applies to commando8
+if(UNRTCLOCK)
+    add_definitions(-DAUDIO -DVOICE )
+else()   
+    add_definitions(-DAUDIO -DVOICE -DRTCLOCK)
+endif()
+    
 add_definitions(-DSBUS_TRAINER)
 
 set(SRC
